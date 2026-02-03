@@ -8,3 +8,23 @@ workspace = false
 command = "leptosfmt"
 args = ["./**/*.rs"]
 workspace = false
+
+[tasks.services]
+description = "Start PostgreSQL v16 container for local development"
+workspace = false
+script = '''
+docker compose up -d
+echo ""
+echo "PostgreSQL 16 started on localhost:5432"
+echo "  Database: taskapp"
+echo "  User: taskapp"
+echo "  Password: taskapp"
+'''
+
+[tasks.services-stop]
+description = "Stop and remove PostgreSQL container"
+workspace = false
+script = '''
+docker compose down
+echo "Services stopped"
+'''
