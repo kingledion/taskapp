@@ -1,0 +1,10 @@
+[tasks.watch]
+command = "cargo"
+args = ["leptos", "watch"]
+cwd = "taskapp"
+workspace = false 
+
+[tasks.fmt]
+command = "leptosfmt"
+args = ["./**/*.rs"]
+workspace = false
