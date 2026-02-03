@@ -7,6 +7,8 @@ async fn main() {
     use leptos::prelude::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
     use taskapp::app::*;
+    use taskapp::state::AppState;
+    use tower::ServiceBuilder;
 
     let conf = get_configuration(None).unwrap();
     let addr = conf.leptos_options.site_addr;
@@ -14,13 +16,17 @@ async fn main() {
     // Generate the list of routes in your Leptos App
     let routes = generate_route_list(App);
 
+    // Create shared application state
+    let app_state = AppState::default();
+
     let app = Router::new()
         .leptos_routes(&leptos_options, routes, {
             let leptos_options = leptos_options.clone();
             move || shell(leptos_options.clone())
         })
         .fallback(leptos_axum::file_and_error_handler(shell))
-        .with_state(leptos_options);
+        .with_state(leptos_options)
+        .layer(ServiceBuilder::new().layer(axum::Extension(app_state)));
 
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
