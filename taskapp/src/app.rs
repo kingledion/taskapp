@@ -1,5 +1,5 @@
 use crate::model::Task;
-use crate::server::{create_task, get_tasks};
+use crate::server::{complete_task, create_task, delete_task, get_tasks};
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
@@ -50,11 +50,42 @@ pub fn App() -> impl IntoView {
 }
 
 #[component]
-fn TaskCard(task: Task) -> impl IntoView {
+fn TaskCard(
+    task: Task,
+    on_complete: Action<(u32, bool), Result<Task, ServerFnError>>,
+    on_delete: Action<u32, Result<(), ServerFnError>>,
+) -> impl IntoView {
+    let task_id = task.id;
+    let is_completed = task.is_completed();
+
     view! {
-        <div class="task-card">
-            <h3 class="task-title">{task.title}</h3>
-            <p class="task-description">{task.description}</p>
+        <div class="task-card" class:completed=is_completed>
+            <div class="task-checkbox">
+                <input
+                    type="checkbox"
+                    checked=is_completed
+                    on:change=move |ev| {
+                        let checked = event_target_checked(&ev);
+                        on_complete.dispatch((task_id, checked));
+                    }
+                />
+            </div>
+            <div class="task-content">
+                <h3 class="task-title">{task.title}</h3>
+                <p class="task-description">{task.description}</p>
+            </div>
+            <button
+                class="delete-btn"
+                title="Delete task"
+                on:click=move |_| { on_delete.dispatch(task_id); }
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+            </button>
         </div>
     }
 }
@@ -131,9 +162,32 @@ fn TaskListPage() -> impl IntoView {
         async move { create_task(title, description).await }
     });
 
-    // Refetch tasks when a new task is created
+    let complete_action = Action::new(|(id, completed): &(u32, bool)| {
+        let id = *id;
+        let completed = *completed;
+        async move { complete_task(id, completed).await }
+    });
+
+    let delete_action = Action::new(|id: &u32| {
+        let id = *id;
+        async move { delete_task(id).await }
+    });
+
+    // Refetch tasks when any action completes
     Effect::new(move || {
         if create_action.value().get().is_some() {
+            tasks_resource.refetch();
+        }
+    });
+
+    Effect::new(move || {
+        if complete_action.value().get().is_some() {
+            tasks_resource.refetch();
+        }
+    });
+
+    Effect::new(move || {
+        if delete_action.value().get().is_some() {
             tasks_resource.refetch();
         }
     });
@@ -155,7 +209,13 @@ fn TaskListPage() -> impl IntoView {
                                             <For
                                                 each=move || tasks.clone()
                                                 key=|task| task.id
-                                                children=move |task| view! { <TaskCard task=task /> }
+                                                children=move |task| view! {
+                                                    <TaskCard
+                                                        task=task
+                                                        on_complete=complete_action
+                                                        on_delete=delete_action
+                                                    />
+                                                }
                                             />
                                         }.into_any()
                                     }
