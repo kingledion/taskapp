@@ -2,6 +2,10 @@ pub mod app;
 pub mod model;
 pub mod server;
 #[cfg(feature = "ssr")]
+pub mod db;
+#[cfg(feature = "ssr")]
+pub mod entity;
+#[cfg(feature = "ssr")]
 pub mod state;
 
 #[cfg(feature = "hydrate")]

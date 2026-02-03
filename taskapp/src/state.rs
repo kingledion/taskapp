@@ -1,9 +1,6 @@
-use std::sync::{Arc, RwLock};
+use sea_orm::DatabaseConnection;
 
-use crate::model::Task;
-
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct AppState {
-    pub tasks: Arc<RwLock<Vec<Task>>>,
-    pub next_id: Arc<RwLock<u32>>,
+    pub db: DatabaseConnection,
 }

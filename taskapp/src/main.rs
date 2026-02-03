@@ -7,8 +7,15 @@ async fn main() {
     use leptos::prelude::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
     use taskapp::app::*;
+    use taskapp::db::establish_connection;
     use taskapp::state::AppState;
     use tower::ServiceBuilder;
+
+    // Connect to the database
+    let db = establish_connection()
+        .await
+        .expect("Failed to connect to database");
+    log!("Connected to database");
 
     let conf = get_configuration(None).unwrap();
     let addr = conf.leptos_options.site_addr;
@@ -16,8 +23,8 @@ async fn main() {
     // Generate the list of routes in your Leptos App
     let routes = generate_route_list(App);
 
-    // Create shared application state
-    let app_state = AppState::default();
+    // Create shared application state with database connection
+    let app_state = AppState { db };
 
     let app = Router::new()
         .leptos_routes(&leptos_options, routes, {

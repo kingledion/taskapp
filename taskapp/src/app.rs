@@ -52,8 +52,8 @@ pub fn App() -> impl IntoView {
 #[component]
 fn TaskCard(
     task: Task,
-    on_complete: Action<(u32, bool), Result<Task, ServerFnError>>,
-    on_delete: Action<u32, Result<(), ServerFnError>>,
+    on_complete: Action<(i32, bool), Result<Task, ServerFnError>>,
+    on_delete: Action<i32, Result<(), ServerFnError>>,
 ) -> impl IntoView {
     let task_id = task.id;
     let is_completed = task.is_completed();
@@ -162,13 +162,13 @@ fn TaskListPage() -> impl IntoView {
         async move { create_task(title, description).await }
     });
 
-    let complete_action = Action::new(|(id, completed): &(u32, bool)| {
+    let complete_action = Action::new(|(id, completed): &(i32, bool)| {
         let id = *id;
         let completed = *completed;
         async move { complete_task(id, completed).await }
     });
 
-    let delete_action = Action::new(|id: &u32| {
+    let delete_action = Action::new(|id: &i32| {
         let id = *id;
         async move { delete_task(id).await }
     });
